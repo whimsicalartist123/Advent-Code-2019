@@ -22,7 +22,7 @@ def parse_opcode(num):
     # print(opcode, p1_mode, p2_mode, p3_mode)
     return opcode, (c, b, a)
 
-def act(memory, modes, idx):
+def get_values(memory, modes, idx):
     
     val1 = memory[idx+1] if modes[0] == 0 else idx+1
     val2 = memory[idx+2] if modes[1] == 0 else idx+2
@@ -37,11 +37,11 @@ def run_program(program):
         opcode, modes = parse_opcode(memory[idx])
         if opcode == 1:
             # print(f"Opcode: {opcode}\t")
-            val1, val2 = act(memory, modes, idx)
+            val1, val2 = get_values(memory, modes, idx)
             memory[memory[idx+3]] = memory[val1] + memory[val2]
             idx += 4
         elif opcode == 2:
-            val1, val2 = act(memory, modes, idx)
+            val1, val2 = get_values(memory, modes, idx)
             memory[memory[idx+3]] = memory[val1] * memory[val2]
             idx += 4
         elif opcode == 3:
@@ -53,11 +53,39 @@ def run_program(program):
             val = memory[idx+1] if modes[0] == 0 else idx+1
             output.append(memory[val])
             idx += 2
+        elif opcode == 5:
+            val1, val2 = get_values(memory, modes, idx)
+            if memory[val1]:
+                idx = memory[val2]
+            else:
+                idx += 3
+        elif opcode == 6:
+            val1, val2 = get_values(memory, modes, idx)
+            if not memory[val1]:
+                idx = memory[val2]
+            else:
+                idx += 3
+        elif opcode == 7:
+            val1, val2 = get_values(memory, modes, idx)
+            if memory[val1] < memory[val2]:
+                memory[memory[idx+3]] = 1
+            else:
+                memory[memory[idx+3]] = 0
+            idx += 4
+        elif opcode == 8:
+            val1, val2 = get_values(memory, modes, idx)
+            if memory[val1] == memory[val2]:
+                memory[memory[idx+3]] = 1
+            else:
+                memory[memory[idx+3]] = 0
+            idx += 4
         else:
             raise RuntimeError(f"invalid opcode: {memory[idx]}")
-    return output
+    return output[-1]
+
+
+assert run_program([3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
+1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
+999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]) == 1000
 
 print(run_program(program))
-# # parse_opcode(4)
-# print(program.count(4))
-
